@@ -1,0 +1,64 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+
+public class Weather
+{
+    public string Temperature { get; set; }
+    public string Description { get; set; }
+}
+
+public class WeatherForecast
+{
+    public string City { get; set; }
+    public Weather Today { get; set; }
+    public Weather[] Forecast { get; set; }
+}
+
+class Program
+{
+    static async Task Main()
+    {
+        string[] cities = { "istanbul", "izmir", "ankara" };
+
+        foreach (var city in cities)
+        {
+            await DisplayWeather(city);
+        }
+    }
+
+    static async Task DisplayWeather(string city)
+    {
+        try
+        {
+            WeatherForecast weatherData = await GetWeatherData(city);
+
+            Console.WriteLine($"City: {weatherData.City}");
+            Console.WriteLine($"Today's Weather: {weatherData.Today.Temperature} - {weatherData.Today.Description}");
+            Console.WriteLine("Forecast for the next 3 days:");
+
+            foreach (var forecast in weatherData.Forecast)
+            {
+                Console.WriteLine($"  {forecast.Temperature} - {forecast.Description}");
+            }
+
+            Console.WriteLine();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting weather data for {city}: {ex.Message}");
+        }
+    }
+
+    static async Task<WeatherForecast> GetWeatherData(string city)
+    {
+        using (HttpClient client = new HttpClient())
+        {
+            string apiUrl = $"https://goweather.herokuapp.com/weather/{city}";
+            string response = await client.GetStringAsync(apiUrl);
+
+            return JsonConvert.DeserializeObject<WeatherForecast>(response);
+        }
+    }
+}
